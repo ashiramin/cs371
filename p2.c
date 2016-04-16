@@ -50,43 +50,34 @@ int main(int argc, char	**argv)
 
 fp2 = fopen(argv[2], "r");
 
-fscanf(fp2,"%s %s %s", id, mask, next);
- printf("id=%s, mask=%s, next=%s\n",id, mask, next);
- /*fscanf(fp2,"%s %s %s", id, mask, next);
- printf("id=%s, mask=%s, next=%s\n",id, mask, next);
-
- unsigned int zid = inet_addr(id);
- unsigned int zmask = inet_addr(mask);
- unsigned int znext = inet_addr(next);
-*/
 int count = 0;
 while (fread(&x,4,1,fp1)) { // read IP first line
 	version = x.a & 0xF0;
-	count++;
+	
  
  	version = version >> 4;
  
- 	printf("version = %d\n", version);
+ 	//printf("version = %d\n", version);
 
 	hlen = x.a & 0x0F;
 	hlen = hlen * 4;
-	printf("hlen = %d\n",hlen);
+	//printf("hlen = %d\n",hlen);
 
 	total_len = x.c * 256 + x.d;
-	printf("total length = %d\n", total_len);
+	//printf("total length = %d\n", total_len);
 
 	fread(&x,4,1,fp1); // IGNORE 
 
 	fread(&x,4,1,fp1); // TTL and checksum
 
-	printf("TTL = %d\n", x.a);
+	//printf("TTL = %d\n", x.a);
 	checkSum = x.c * 256 + x.d;
-	printf("Checksum = %d\n", checkSum);
+	//printf("Checksum = %d\n", checkSum);
 
 	fread(&a,4,1,fp1); // SOURCE IP
 	unsigned char *ip = &a;
 
-	printf("%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
+	//printf("%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
 	n = fread(&a,4,1,fp1); // Destination IP
 	unsigned char *ip1 = &a;
 	//*ip1 = &a;
@@ -95,26 +86,42 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 	char content[total_len - 20];
 	n = fread(&content,total_len - 20,1,fp1); // DATA
 	printf("Message = %s\n",content);
-
-	if (count == 2) {
-		printf("id=%s, mask=%s, next=%s\n",id, mask, next);
- 		fscanf(fp2,"%s %s %s", id, mask, next);
- 		unsigned int zid = inet_addr(id);
+	unsigned int prevMask = 0;
+	char packetFwdIP[20];
+	while (count < 7) {
+		count++;
+		fscanf(fp2,"%s %s %s", id, mask, next);
+		
+		unsigned int zid = inet_addr(id);
 		unsigned int zmask = inet_addr(mask);
 		unsigned int znext = inet_addr(next);
 
+		
+		
+
 		if ((a & zmask) == zid) {
-			printf("%s\n", "SDAASDASDASDASDASDASDSDASDASS");
+
+			//printf("%s\n", "There is a match");
+			//printf("Mask number = %d\n", zmask );
+			//printf("prevMask number = %d\n", prevMask );
+			if ( zmask >= prevMask ) {
+				prevMask = zmask;
+				
+				//printf("BALSALDLASDASDLASDASDLS %d\n", prevMask);
+				strcpy(packetFwdIP,next);
+				//packetFwdIP = next;
+			}
+			//printf("id=%s, mask=%s, next=%s\n",id, mask, next);
 		}
 
- 		printf("id=%s, mask=%s, next=%s\n",id, mask, next);
-
-		zid = inet_addr(id);
-		zmask = inet_addr(mask);
-		znext = inet_addr(next);
 	}
+	count = 0;
+	prevMask = 0;
+	rewind(fp2);
 
-	printf("Next Packer\n");
+	printf("IP= %s\n",packetFwdIP);
+
+	printf("Next Packet \n");
 	printf("\n");
 }
 
