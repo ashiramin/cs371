@@ -48,10 +48,21 @@ int main(int argc, char	**argv)
  	exit(1);
  }
 
+fp2 = fopen(argv[2], "r");
 
+fscanf(fp2,"%s %s %s", id, mask, next);
+ printf("id=%s, mask=%s, next=%s\n",id, mask, next);
+ /*fscanf(fp2,"%s %s %s", id, mask, next);
+ printf("id=%s, mask=%s, next=%s\n",id, mask, next);
 
+ unsigned int zid = inet_addr(id);
+ unsigned int zmask = inet_addr(mask);
+ unsigned int znext = inet_addr(next);
+*/
+int count = 0;
 while (fread(&x,4,1,fp1)) { // read IP first line
 	version = x.a & 0xF0;
+	count++;
  
  	version = version >> 4;
  
@@ -85,129 +96,32 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 	n = fread(&content,total_len - 20,1,fp1); // DATA
 	printf("Message = %s\n",content);
 
+	if (count == 2) {
+		printf("id=%s, mask=%s, next=%s\n",id, mask, next);
+ 		fscanf(fp2,"%s %s %s", id, mask, next);
+ 		unsigned int zid = inet_addr(id);
+		unsigned int zmask = inet_addr(mask);
+		unsigned int znext = inet_addr(next);
+
+		if ((a & zmask) == zid) {
+			printf("%s\n", "SDAASDASDASDASDASDASDSDASDASS");
+		}
+
+ 		printf("id=%s, mask=%s, next=%s\n",id, mask, next);
+
+		zid = inet_addr(id);
+		zmask = inet_addr(mask);
+		znext = inet_addr(next);
+	}
+
 	printf("Next Packer\n");
 	printf("\n");
 }
 
-/*
-n = fread(&x,4,1,fp1);
 
- 
- 
- //close(fp1);
 
-n = fread(&x,4,1,fp1); // IGNORE
 
-n = fread(&x,4,1,fp1); // TTL and Checksum
 
-
-printf("TTL = %d\n", x.a);
-checkSum = x.c * 256 + x.d;
-printf("Checksum = %d\n", checkSum);
-
-
-n = fread(&a,4,1,fp1); // SOURCE IP
-unsigned char *ip = &a;
-
-printf("%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
-n = fread(&a,4,1,fp1); // Destination IP
-*ip = &a;
-printf("%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
-
-
-
-
-char content[total_len];
-n = fread(&content,sizeof(content),1,fp1); // DATA
-printf("Message = %s\n",content);
-
-printf("Next Packer\n");
-printf("\n");
-
-
-n = fread(&x,4,1,fp1);
-
-//printf("%d\n", x.a);
- version = x.a & 0xF0;
- //printf("%d\n", version );
- version = version >> 4;
- //printf("%d\n", version );
- printf("version = %d\n", version);
-
- hlen = x.a & 0x0F;
- hlen = hlen * 4;
- printf("hlen = %d\n",hlen);
-
- total_len = x.c * 256 + x.d;
- printf("total length = %d\n", total_len);
- //close(fp1);
-
-
-
-n = fread(&x,4,1,fp1);
-
-
-
-n = fread(&x,4,1,fp1);// TTL and Checksum
-
-printf("TTL = %d\n", x.a);
-checkSum = x.c * 256 + x.d;
-printf("Checksum = %d\n", checkSum);
-
-
-n = fread(&a,4,1,fp1); // SOURCE IP
-unsigned char *ip1 = &a;
-
-printf("%d.%d.%d.%d\n", ip1[0], ip1[1], ip1[2], ip1[3]);
-
-
-n = fread(&a,4,1,fp1); // Destination IP
-*ip1 = &a;
-printf("%d.%d.%d.%d\n", ip1[0], ip1[1], ip1[2], ip1[3]);
-
-
-char content1[total_len];
-
-n = fread(&content1,sizeof(content1),1,fp1);
-printf("%s\n",content1);
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
  fp1 = fopen(argv[1],"r");
  n = fread(&y, 4, 1, fp1);
  printf("y first total length= %d\n", y.c);
@@ -215,19 +129,12 @@ printf("%s\n",content1);
  printf("y second total total length= %d\n", y.c);
  close(fp1);
 
- fp2 = fopen(argv[2], "r");
- fscanf(fp2,"%s %s %s", id, mask, next);
- printf("id=%s, mask=%s, next=%s\n",id, mask, next);
- fscanf(fp2,"%s %s %s", id, mask, next);
- printf("id=%s, mask=%s, next=%s\n",id, mask, next);
+// fp2 = fopen(argv[2], "r");
+ 
 
- int zid = inet_addr(id);
- int zmask = inet_addr(mask);
- int znext = inet_addr(next);
-
- printf("z = %u\n",zid);
+ //printf("z = %d\n",zid);
  fclose(fp2);
 
-*/
+
  return 0;
 }
