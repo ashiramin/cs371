@@ -24,7 +24,7 @@ unsigned short c;
 
 int main(int argc, char	**argv)
 {
- FILE *fp1, *fp2;
+ FILE *fp1, *fp2, *fp3;
  int i;
  int rslt;
 
@@ -51,9 +51,10 @@ int main(int argc, char	**argv)
 fp2 = fopen(argv[2], "r");
 
 int count = 0;
+int packetCount = 0;
 while (fread(&x,4,1,fp1)) { // read IP first line
 	version = x.a & 0xF0;
-	
+	packetCount++;
  
  	version = version >> 4;
  
@@ -69,26 +70,69 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 	fread(&x,4,1,fp1); // IGNORE 
 
 	fread(&x,4,1,fp1); // TTL and checksum
-
-	//printf("TTL = %d\n", x.a);
+	int TTL = x.a;
+	printf("TTL = %d\n", TTL);
 	checkSum = x.c * 256 + x.d;
 	//printf("Checksum = %d\n", checkSum);
 
 	fread(&a,4,1,fp1); // SOURCE IP
 	unsigned char *ip = &a;
 
-	//printf("%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
+
+
+
+
+
+	printf("%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
 	n = fread(&a,4,1,fp1); // Destination IP
 	unsigned char *ip1 = &a;
 	//*ip1 = &a;
 	printf("%d.%d.%d.%d\n", ip1[0], ip1[1], ip1[2], ip1[3]);
 
+
+
+
+
 	char content[total_len - 20];
 	n = fread(&content,total_len - 20,1,fp1); // DATA
 	printf("Message = %s\n",content);
+
 	unsigned int prevMask = 0;
+
 	char packetFwdIP[20];
-	while (count < 7) {
+	char line[100];
+	int droppedPacket = 0 ;
+
+
+	fp3 = fopen("ans.txt", "w");
+
+
+	if (TTL <=1) {
+		droppedPacket = 1;
+		strcpy(packetFwdIP, " Packet was dropped TTL becomes 0");
+		char response[200];
+		char abc[20];
+		//char *some_addr = inet_ntoa(ip1);
+		char sourceIP[50];
+		char destIP[50];
+		sprintf(sourceIP, " Source IP = %d.%d.%d.%d",ip[0], ip[1], ip[2], ip[3]);
+		sprintf(destIP, " Destination IP = %d.%d.%d.%d",ip1[0], ip1[1], ip1[2], ip1[3]);
+
+		sprintf(abc,"TTL = %d",TTL);
+		strcat(response,abc);
+		strcat(response,sourceIP);
+		strcat(response,destIP);
+		strcat(response,packetFwdIP);
+
+		//strcat(response, TTL);
+		//strcat(response, );
+		//strcat(response, );
+		//strcat(response, );
+		//printf("%s\n",abc);
+		printf("%s\n",response );
+	}
+
+	while (count < 7 && droppedPacket == 0) {
 		count++;
 		fscanf(fp2,"%s %s %s", id, mask, next);
 		
@@ -124,6 +168,8 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 	printf("Next Packet \n");
 	printf("\n");
 }
+
+
 
 
 
