@@ -52,6 +52,9 @@ fp2 = fopen(argv[2], "r");
 
 int count = 0;
 int packetCount = 0;
+char response[1000];
+
+
 while (fread(&x,4,1,fp1)) { // read IP first line
 	version = x.a & 0xF0;
 	packetCount++;
@@ -77,8 +80,8 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 
 	fread(&a,4,1,fp1); // SOURCE IP
 	unsigned char *ip = &a;
-
-
+	char sourceIP[50];
+	sprintf(sourceIP, " Source IP = %d.%d.%d.%d",ip[0], ip[1], ip[2], ip[3]);
 
 
 
@@ -86,6 +89,9 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 	printf("%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
 	n = fread(&a,4,1,fp1); // Destination IP
 	unsigned char *ip1 = &a;
+	char destIP[50];
+	sprintf(destIP, " Destination IP = %d.%d.%d.%d",ip1[0], ip1[1], ip1[2], ip1[3]);
+
 	//*ip1 = &a;
 	printf("%d.%d.%d.%d\n", ip1[0], ip1[1], ip1[2], ip1[3]);
 
@@ -110,13 +116,13 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 	if (TTL <=1) {
 		droppedPacket = 1;
 		strcpy(packetFwdIP, " Packet was dropped TTL becomes 0");
-		char response[200];
+		
 		char abc[20];
 		//char *some_addr = inet_ntoa(ip1);
-		char sourceIP[50];
-		char destIP[50];
-		sprintf(sourceIP, " Source IP = %d.%d.%d.%d",ip[0], ip[1], ip[2], ip[3]);
-		sprintf(destIP, " Destination IP = %d.%d.%d.%d",ip1[0], ip1[1], ip1[2], ip1[3]);
+		//char sourceIP[50];
+		
+		//sprintf(sourceIP, " Source IP = %d.%d.%d.%d",ip[0], ip[1], ip[2], ip[3]);
+		//sprintf(destIP, " Destination IP = %d.%d.%d.%d",ip1[0], ip1[1], ip1[2], ip1[3]);
 
 		sprintf(abc,"TTL = %d",TTL);
 		strcat(response,abc);
