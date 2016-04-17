@@ -127,14 +127,9 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 		sprintf(abc,"TTL = %d",TTL);
 		strcat(response,abc);
 		strcat(response,sourceIP);
-		strcat(response,destIP);
+		strcat(response,"Sdsd");
 		strcat(response,packetFwdIP);
 
-		//strcat(response, TTL);
-		//strcat(response, );
-		//strcat(response, );
-		//strcat(response, );
-		//printf("%s\n",abc);
 		printf("%s\n",response );
 	}
 
