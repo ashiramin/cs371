@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -w
 INCLUDES = -I.
 LIBS = -lpthread -ldl
 SRCS = p2.c

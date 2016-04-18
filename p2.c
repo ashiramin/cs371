@@ -5,6 +5,8 @@
 #include <math.h>
 #include <stdlib.h>
 
+
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -16,15 +18,11 @@ unsigned char c;
 unsigned char d;
 };
 
-struct line2 {
-unsigned char a;
-unsigned char b;
-unsigned short c;
-};
+
 
 int main(int argc, char	**argv)
 {
- FILE *fp1, *fp2, *fp3;
+ FILE *fp1, *fp2, *fp3, *fp4;
  
 
  struct line1 x;
@@ -36,10 +34,11 @@ int main(int argc, char	**argv)
 
  unsigned int a;
  int checkSum;
- 
- struct line2 y;
+
+
  char id[20], mask[20], next[20];
- unsigned int z;
+
+
 
  fp1 = fopen(argv[1],"r");
  if (fp1 == NULL) {
@@ -49,16 +48,51 @@ int main(int argc, char	**argv)
 
 fp2 = fopen(argv[2], "r");
 
+if (fp2 == NULL) {
+ 	printf("Cannot open %s\n", argv[2]);
+ 	exit(1);
+ }
+
 int count = 0;
 int packetCount = 0;
 char response[110];
 
-fp3 = fopen("ans.txt", "a");
+fp3 = fopen("ans.txt", "w");
+int ctx= 0;
+short index = 0;
+unsigned int newchecksum;
+while(ctx !=10) {
+	ctx++;
+	fread(&index,sizeof(index),1,fp1);
+	if (ctx !=6) {
+		//printf("%04x\n",index);
+		newchecksum +=index;
+
+		if (newchecksum > 65535) {
+			newchecksum -=65535;
+		}
+	}
+}
+
+printf("IP = %04x\n", htons(~(short)newchecksum));
+
+
+
+rewind(fp1);
 
 while (fread(&x,4,1,fp1)) { // read IP first line
 	version = x.a & 0xF0;
 	packetCount++;
  
+	unsigned int checkcnt;
+	
+	checkcnt  = (x.a * 256 + x.b) + (x.c * 256 + x.d);
+
+	if  (checkcnt > 65535) {
+		checkcnt -=65535;
+	}
+
+
  	version = version >> 4;
  
  	//printf("version = %d\n", version);
@@ -72,33 +106,112 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 
 	fread(&x,4,1,fp1); // IGNORE 
 
+	checkcnt = checkcnt + (x.a * 256 + x.b);
+	if  (checkcnt > 65535) {
+		checkcnt -=65535;
+	}
+
+
+	checkcnt = checkcnt + (x.c * 256 + x.d);
+	if  (checkcnt > 65535) {
+		checkcnt -=65535;
+	}
+
+
+
+
+
 	fread(&x,4,1,fp1); // TTL and checksum
 	int TTL = x.a;
-	printf("TTL = %d\n", TTL);
 	checkSum = x.c * 256 + x.d;
-	//printf("Checksum = %d\n", checkSum);
 
+	//printf("TTL = %d\n", TTL);
+
+	checkcnt = checkcnt + (x.a * 256 + x.b);
+	if  (checkcnt > 65535) {
+		checkcnt -=65535;
+	}
+
+
+
+
+
+	checkSum = x.c * 256 + x.d;
+	
 	fread(&a,4,1,fp1); // SOURCE IP
+	
+
+	short ipPart1 =  a & 0xFFFF;
+	short ipPart2 = (a & 0xFFFF0000) >> 16;
+
+	//printf("YOLLLOO %04x\n", htons(ipPart1));
+	checkcnt += htons(ipPart1);
+	if  (checkcnt > 65535) {
+		checkcnt -=65535;
+	}
+
+
+
+	checkcnt += htons(ipPart2);
+	if  (checkcnt > 65535) {
+		checkcnt -=65535;
+	}
+	
+	
+
 	unsigned char *ip = &a;
+
+
 	char sourceIP[50];
 	sprintf(sourceIP, " Source IP = %d.%d.%d.%d",ip[0], ip[1], ip[2], ip[3]);
 
-	printf("%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
+	
 	n = fread(&a,4,1,fp1); // Destination IP
+	
+
+	ipPart1 =  a & 0xFFFF;
+	ipPart2 = (a & 0xFFFF0000) >> 16;
+
+	checkcnt += htons(ipPart1);
+	if  (checkcnt > 65535) {
+		checkcnt -=65535;
+	}
+
+
+
+	checkcnt += htons(ipPart2);
+	if  (checkcnt > 65535) {
+		checkcnt -=65535;
+	}
+
+
+
 	unsigned char *ip1 = &a;
 	char destIP[50];
 	sprintf(destIP, " Destination IP = %d.%d.%d.%d ",ip1[0], ip1[1], ip1[2], ip1[3]);
-	//printf("DEST%s\n", destIP);
-	//*ip1 = &a;
-	printf("%d.%d.%d.%d\n", ip1[0], ip1[1], ip1[2], ip1[3]);
+	
+
+
+
+	//// Checksume check
+	
+	
 
 
 
 
+
+	//// End checksum chekc
+
+	short finalAnswer = (short)checkcnt;
+	printf("reverse = %04x\n", ~(short)checkcnt);
+	printf("IP= %04x\n", checkcnt );
+	printf("%d\n", checkSum );
+	printf("%04x\n", checkSum );
 
 	char content[total_len - 20];
 	n = fread(&content,total_len - 20,1,fp1); // DATA
-	printf("Message = %s\n",content);
+	//printf("Message = %s\n",content);
 
 	unsigned int prevMask = 0;
 
@@ -121,44 +234,39 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 	strcat(response,sourceIP);
 	strcat(response,destIP);
 	strcat(response,totalLength);
-		//strcat(response,packetFwdIP);
-
-		//printf("%s\n",response );
-
-
-
-
 
 	if (TTL <=1) {
 		droppedPacket = 1;
 		strcpy(packetFwdIP, " Packet was dropped TTL becomes 0\n");
 	}
 
-	while (count < 7 && droppedPacket == 0) {
+
+
+
+
+
+
+
+
+
+	while (fscanf(fp2,"%s %s %s", id, mask, next) != EOF && droppedPacket == 0) {
 		count++;
 		fscanf(fp2,"%s %s %s", id, mask, next);
 		
 		unsigned int zid = inet_addr(id);
 		unsigned int zmask = inet_addr(mask);
-		unsigned int znext = inet_addr(next);
+		//unsigned int znext = inet_addr(next);
 
 		
 		
 
 		if ((a & zmask) == zid) {
 
-			//printf("%s\n", "There is a match");
-			//printf("Mask number = %d\n", zmask );
-			//printf("prevMask number = %d\n", prevMask );
 			if ( zmask >= prevMask ) {
 				prevMask = zmask;
-				
-				//printf("BALSALDLASDASDLASDASDLS %d\n", prevMask);
 				strcpy(packetFwdIP,next);
 				strcat(packetFwdIP, " is next hop IP\n");
-				//packetFwdIP = next;
 			}
-			//printf("id=%s, mask=%s, next=%s\n",id, mask, next);
 		}
 
 	}
@@ -169,7 +277,7 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 	printf("Next Hop IP= %s\n", packetFwdIP);
 	strcat(response,packetFwdIP);
 
-	printf("%s\n",response);
+	//printf("%s\n",response);
 
 	fprintf(fp3, "%s", response);
 
@@ -184,21 +292,8 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 
 
 
-
-
-
-
- fp1 = fopen(argv[1],"r");
- n = fread(&y, 4, 1, fp1);
- printf("y first total length= %d\n", y.c);
- y.c = ntohs(y.c);
- printf("y second total total length= %d\n", y.c);
- close(fp1);
-
-// fp2 = fopen(argv[2], "r");
- 
-
- //printf("z = %d\n",zid);
+ fclose(fp1);
+ fclose(fp3);
  fclose(fp2);
 
 
