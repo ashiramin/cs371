@@ -65,7 +65,7 @@ while(ctx !=10) {
 	ctx++;
 	fread(&index,sizeof(index),1,fp1);
 	if (ctx !=6) {
-		//printf("%04x\n",index);
+		
 		newchecksum +=index;
 
 		if (newchecksum > 65535) {
@@ -86,7 +86,9 @@ while (fread(&x,4,1,fp1)) { // read IP first line
  
 	unsigned int checkcnt;
 	
-	checkcnt  = (x.a * 256 + x.b) + (x.c * 256 + x.d);
+
+
+	checkcnt  = htons((x.a * 256 + x.b)) + htons((x.c * 256 + x.d));
 
 	if  (checkcnt > 65535) {
 		checkcnt -=65535;
@@ -106,13 +108,13 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 
 	fread(&x,4,1,fp1); // IGNORE 
 
-	checkcnt = checkcnt + (x.a * 256 + x.b);
+	checkcnt = checkcnt + htons((x.a * 256 + x.b));
 	if  (checkcnt > 65535) {
 		checkcnt -=65535;
 	}
 
 
-	checkcnt = checkcnt + (x.c * 256 + x.d);
+	checkcnt = checkcnt + htons((x.c * 256 + x.d));
 	if  (checkcnt > 65535) {
 		checkcnt -=65535;
 	}
@@ -127,12 +129,12 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 
 	//printf("TTL = %d\n", TTL);
 
-	checkcnt = checkcnt + (x.a * 256 + x.b);
+	checkcnt = checkcnt + htons((x.a * 256 + x.b));
 	if  (checkcnt > 65535) {
 		checkcnt -=65535;
 	}
 
-
+	
 
 
 
@@ -144,15 +146,15 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 	short ipPart1 =  a & 0xFFFF;
 	short ipPart2 = (a & 0xFFFF0000) >> 16;
 
-	//printf("YOLLLOO %04x\n", htons(ipPart1));
-	checkcnt += htons(ipPart1);
+	//printf("YOLLLOO %04x\n", ipPart2);
+	checkcnt += ipPart1;
 	if  (checkcnt > 65535) {
 		checkcnt -=65535;
 	}
 
 
 
-	checkcnt += htons(ipPart2);
+	checkcnt += ipPart2;
 	if  (checkcnt > 65535) {
 		checkcnt -=65535;
 	}
@@ -171,15 +173,15 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 
 	ipPart1 =  a & 0xFFFF;
 	ipPart2 = (a & 0xFFFF0000) >> 16;
-
-	checkcnt += htons(ipPart1);
+	
+	checkcnt += ipPart1;
 	if  (checkcnt > 65535) {
 		checkcnt -=65535;
 	}
 
 
 
-	checkcnt += htons(ipPart2);
+	checkcnt += ipPart2;
 	if  (checkcnt > 65535) {
 		checkcnt -=65535;
 	}
@@ -204,10 +206,8 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 	//// End checksum chekc
 
 	short finalAnswer = (short)checkcnt;
-	printf("reverse = %04x\n", ~(short)checkcnt);
-	printf("IP= %04x\n", checkcnt );
-	printf("%d\n", checkSum );
-	printf("%04x\n", checkSum );
+	
+	//printf("%04x\n", checkSum );
 
 	char content[total_len - 20];
 	n = fread(&content,total_len - 20,1,fp1); // DATA
@@ -235,10 +235,22 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 	strcat(response,destIP);
 	strcat(response,totalLength);
 
-	if (TTL <=1) {
+	if (TTL ==0) {
 		droppedPacket = 1;
 		strcpy(packetFwdIP, " Packet was dropped TTL becomes 0\n");
 	}
+
+
+	printf("%04x\n", htons(~(short)checkcnt));
+	checkcnt = htons(~(short)checkcnt);
+	//printf("IP= %04x\n", checkcnt );
+	printf("%04x\n", checkSum );
+
+	if (checkcnt != checkSum) {
+		droppedPacket = 1;
+		strcpy(packetFwdIP, " Packet was dropped Checksum incorrect\n");
+	}
+
 
 
 
