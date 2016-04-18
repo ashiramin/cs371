@@ -25,8 +25,7 @@ unsigned short c;
 int main(int argc, char	**argv)
 {
  FILE *fp1, *fp2, *fp3;
- int i;
- int rslt;
+ 
 
  struct line1 x;
  int n;
@@ -52,8 +51,9 @@ fp2 = fopen(argv[2], "r");
 
 int count = 0;
 int packetCount = 0;
-char response[1000];
+char response[110];
 
+fp3 = fopen("ans.txt", "a");
 
 while (fread(&x,4,1,fp1)) { // read IP first line
 	version = x.a & 0xF0;
@@ -83,15 +83,12 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 	char sourceIP[50];
 	sprintf(sourceIP, " Source IP = %d.%d.%d.%d",ip[0], ip[1], ip[2], ip[3]);
 
-
-
-
 	printf("%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
 	n = fread(&a,4,1,fp1); // Destination IP
 	unsigned char *ip1 = &a;
 	char destIP[50];
-	sprintf(destIP, " Destination IP = %d.%d.%d.%d",ip1[0], ip1[1], ip1[2], ip1[3]);
-
+	sprintf(destIP, " Destination IP = %d.%d.%d.%d ",ip1[0], ip1[1], ip1[2], ip1[3]);
+	//printf("DEST%s\n", destIP);
 	//*ip1 = &a;
 	printf("%d.%d.%d.%d\n", ip1[0], ip1[1], ip1[2], ip1[3]);
 
@@ -105,32 +102,36 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 
 	unsigned int prevMask = 0;
 
-	char packetFwdIP[20];
-	char line[100];
+	char packetFwdIP[25];
+	
 	int droppedPacket = 0 ;
 
 
-	fp3 = fopen("ans.txt", "w");
+	
+
+	TTL = TTL - 1;
+
+	
+		
+	char abc[20];
+	char totalLength[20];
+	sprintf(totalLength, "Total length = %d ", total_len);
+	sprintf(abc,"TTL = %d",TTL);
+	strcat(response,abc);
+	strcat(response,sourceIP);
+	strcat(response,destIP);
+	strcat(response,totalLength);
+		//strcat(response,packetFwdIP);
+
+		//printf("%s\n",response );
+
+
+
 
 
 	if (TTL <=1) {
 		droppedPacket = 1;
-		strcpy(packetFwdIP, " Packet was dropped TTL becomes 0");
-		
-		char abc[20];
-		//char *some_addr = inet_ntoa(ip1);
-		//char sourceIP[50];
-		
-		//sprintf(sourceIP, " Source IP = %d.%d.%d.%d",ip[0], ip[1], ip[2], ip[3]);
-		//sprintf(destIP, " Destination IP = %d.%d.%d.%d",ip1[0], ip1[1], ip1[2], ip1[3]);
-
-		sprintf(abc,"TTL = %d",TTL);
-		strcat(response,abc);
-		strcat(response,sourceIP);
-		strcat(response,"Sdsd");
-		strcat(response,packetFwdIP);
-
-		printf("%s\n",response );
+		strcpy(packetFwdIP, " Packet was dropped TTL becomes 0\n");
 	}
 
 	while (count < 7 && droppedPacket == 0) {
@@ -154,6 +155,7 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 				
 				//printf("BALSALDLASDASDLASDASDLS %d\n", prevMask);
 				strcpy(packetFwdIP,next);
+				strcat(packetFwdIP, " is next hop IP\n");
 				//packetFwdIP = next;
 			}
 			//printf("id=%s, mask=%s, next=%s\n",id, mask, next);
@@ -164,9 +166,19 @@ while (fread(&x,4,1,fp1)) { // read IP first line
 	prevMask = 0;
 	rewind(fp2);
 
-	printf("IP= %s\n",packetFwdIP);
+	printf("Next Hop IP= %s\n", packetFwdIP);
+	strcat(response,packetFwdIP);
+
+	printf("%s\n",response);
+
+	fprintf(fp3, "%s", response);
+
+	//fprintf(fp3, "%s", response);
+
+	memset(response, 0, sizeof response);
 
 	printf("Next Packet \n");
+	
 	printf("\n");
 }
 
