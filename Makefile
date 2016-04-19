@@ -4,7 +4,7 @@ INCLUDES = -I.
 LIBS = -lpthread -ldl
 SRCS = p2.c
 OBJS = p2.o
-EXE = server
+EXE = p2
 
 all:	$(EXE)
 
